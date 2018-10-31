@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     private ImageView avatar;
     private Group groupAvatar;
     int[] avatars = {R.drawable.avatar_0, R.drawable.avatar_1, R.drawable.avatar_2, R.drawable.avatar_3, R.drawable.avatar_4, R.drawable.avatar_5, R.drawable.avatar_6};
+    private Member member;
 
     @Override
     protected void onStart() {
@@ -65,8 +66,22 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                final EditText roomEdit = new EditText(MainActivity.this);
+                roomEdit.setText("Welcome");
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Room name")
+                        .setMessage("Please enter your room name")
+                        .setView(roomEdit)
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                String roomName = roomEdit.getText().toString();
+                                Room room = new Room(roomName, member);
+                                FirebaseDatabase.getInstance().getReference("rooms")
+                                        .push().setValue(room);
+                            }
+                        })
+                        .show();
             }
         });
         findViews();
@@ -135,10 +150,15 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
             FirebaseDatabase.getInstance()
                     .getReference("users")
                     .child(uid)
+                    .child("uid")
+                    .setValue(uid);
+            FirebaseDatabase.getInstance()
+                    .getReference("users")
+                    .child(uid)
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            Member member = dataSnapshot.getValue(Member.class);
+                            member = dataSnapshot.getValue(Member.class);
                             if(member.getNickname() == null) {
                                 showNicknameDialog(displayName);
                             }else {
