@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
 import com.google.firebase.auth.FirebaseAuth;
@@ -32,6 +34,8 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int RC_SIGN_IN = 10;
     private FirebaseAuth auth;
+    private TextView nickText;
+    private ImageView avatar;
 
     @Override
     protected void onStart() {
@@ -62,7 +66,13 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                         .setAction("Action", null).show();
             }
         });
+        findViews();
         auth = FirebaseAuth.getInstance();
+    }
+
+    private void findViews() {
+        nickText = findViewById(R.id.nickname);
+        avatar = findViewById(R.id.avatar);
     }
 
     @Override
@@ -103,18 +113,17 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                     .child(uid)
                     .child("displayName")
                     .setValue(displayName);
-            //get nickname
             FirebaseDatabase.getInstance()
                     .getReference("users")
                     .child(uid)
-                    .child("nickname")
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                    .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            if (dataSnapshot.getValue() != null) {
-                                String nickname = (String) dataSnapshot.getValue();
-                            } else {
+                            Member member = (Member) dataSnapshot.getValue();
+                            if(member.getNickname() == null) {
                                 showNicknameDialog(displayName);
+                            }else {
+                                nickText.setText(member.getNickname());
                             }
                         }
 
@@ -123,6 +132,26 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
 
                         }
                     });
+//            //get nickname
+//            FirebaseDatabase.getInstance()
+//                    .getReference("users")
+//                    .child(uid)
+//                    .child("nickname")
+//                    .addListenerForSingleValueEvent(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                            if (dataSnapshot.getValue() != null) {
+//                                String nickname = (String) dataSnapshot.getValue();
+//                            } else {
+//                                showNicknameDialog(displayName);
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                        }
+//                    });
         } else {
             startActivityForResult(
                     AuthUI.getInstance().createSignInIntentBuilder()
@@ -157,4 +186,3 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                 .show();
     }
 }
-
