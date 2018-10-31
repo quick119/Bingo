@@ -3,6 +3,7 @@ package com.quick.bingo;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.constraint.Group;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
@@ -29,13 +30,15 @@ import java.util.Arrays;
 
 import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
 
-public class MainActivity extends AppCompatActivity implements FirebaseAuth.AuthStateListener {
+public class MainActivity extends AppCompatActivity implements FirebaseAuth.AuthStateListener, View.OnClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int RC_SIGN_IN = 10;
     private FirebaseAuth auth;
     private TextView nickText;
     private ImageView avatar;
+    private Group groupAvatar;
+    int[] avatars = {R.drawable.avatar_0, R.drawable.avatar_1, R.drawable.avatar_2, R.drawable.avatar_3, R.drawable.avatar_4, R.drawable.avatar_5, R.drawable.avatar_6};
 
     @Override
     protected void onStart() {
@@ -73,6 +76,22 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
     private void findViews() {
         nickText = findViewById(R.id.nickname);
         avatar = findViewById(R.id.avatar);
+        groupAvatar = findViewById(R.id.group_avatar);
+        groupAvatar.setVisibility(View.GONE);
+        avatar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean visible = groupAvatar.getVisibility() == View.GONE ? false: true;
+                groupAvatar.setVisibility(visible ? View.GONE : View.VISIBLE);
+            }
+        });
+        findViewById(R.id.avartar_0).setOnClickListener(this);
+        findViewById(R.id.avartar_1).setOnClickListener(this);
+        findViewById(R.id.avartar_2).setOnClickListener(this);
+        findViewById(R.id.avartar_3).setOnClickListener(this);
+        findViewById(R.id.avartar_4).setOnClickListener(this);
+        findViewById(R.id.avartar_5).setOnClickListener(this);
+        findViewById(R.id.avartar_6).setOnClickListener(this);
     }
 
     @Override
@@ -119,12 +138,13 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            Member member = (Member) dataSnapshot.getValue();
+                            Member member = dataSnapshot.getValue(Member.class);
                             if(member.getNickname() == null) {
                                 showNicknameDialog(displayName);
                             }else {
                                 nickText.setText(member.getNickname());
                             }
+                            avatar.setImageResource(avatars[member.getAvatarId()]);
                         }
 
                         @Override
@@ -184,5 +204,41 @@ public class MainActivity extends AppCompatActivity implements FirebaseAuth.Auth
                     }
                 })
                 .show();
+    }
+
+    public void changeNickname(View view) {
+        showNicknameDialog(nickText.getText().toString());
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view instanceof ImageView) {
+            int selectedAvatarId = 0;
+            switch (view.getId()) {
+                case R.id.avartar_1:
+                    selectedAvatarId = 1;
+                    break;
+                case R.id.avartar_2:
+                    selectedAvatarId = 2;
+                    break;
+                case R.id.avartar_3:
+                    selectedAvatarId = 3;
+                    break;
+                case R.id.avartar_4:
+                    selectedAvatarId = 4;
+                    break;
+                case R.id.avartar_5:
+                    selectedAvatarId = 5;
+                    break;
+                case R.id.avartar_6:
+                    selectedAvatarId = 6;
+                    break;
+            }
+            FirebaseDatabase.getInstance().getReference("users")
+                    .child(auth.getCurrentUser().getUid())
+                    .child("avatarId")
+                    .setValue(selectedAvatarId);
+            groupAvatar.setVisibility(View.GONE);
+        }
     }
 }
