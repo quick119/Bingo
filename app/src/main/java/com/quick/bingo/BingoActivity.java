@@ -1,11 +1,18 @@
 package com.quick.bingo;
 
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +27,7 @@ public class BingoActivity extends AppCompatActivity {
     private String roomId;
     private boolean creator;
     private List<Integer> randomNumbers;
+    private FirebaseRecyclerAdapter<Boolean, NumberHolder> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +50,35 @@ public class BingoActivity extends AppCompatActivity {
         } else { //for joiner
 
         }
+        //Recyclerview
+        Query query = FirebaseDatabase.getInstance().getReference("rooms")
+                .child(roomId)
+                .child("numbers")
+                .orderByKey();
+        FirebaseRecyclerOptions<Boolean> options = new FirebaseRecyclerOptions.Builder<Boolean>()
+                .setQuery(query, Boolean.class).build();
+        adapter = new FirebaseRecyclerAdapter<Boolean, NumberHolder>(options) {
+            @Override
+            protected void onBindViewHolder(@NonNull NumberHolder holder, int position, @NonNull Boolean model) {
 
+            }
+
+            @NonNull
+            @Override
+            public NumberHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+                View view = LayoutInflater.from(BingoActivity.this).inflate(R.layout.single_number, viewGroup, false);
+                return null;
+            }
+        };
     }
 
+    class NumberHolder extends RecyclerView.ViewHolder {
+        NumberButton button;
+        public NumberHolder(@NonNull View itemView) {
+            super(itemView);
+            button = itemView.findViewById(R.id.number);
+        }
+    }
     private void generateRandomNumbers() {
         randomNumbers = new ArrayList<>();
         for (int i = 0; i < NUMBER_COUNT; i++) {
